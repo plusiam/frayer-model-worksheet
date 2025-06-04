@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프레이어 모델 학습지 (Frayer Model) - 최종판 v3</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0; 
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            flex: 1; 
+            max-width: 900px;
+            margin: 20px auto; 
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .info-input-area {
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .info-input-area div { 
+            display: flex;
+            flex-direction: column; 
+        }
+        .info-input-area label {
+            font-weight: bold;
+            font-size: 0.95em;
+            margin-bottom: 5px; 
+            color: #555;
+        }
+        .info-input-area input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+            box-sizing: border-box; 
+        }
+        
+        .frayer-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .grid-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .grid-section h2 {
+            margin-top: 0;
+            font-size: 1.2em;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .grid-section textarea {
+            width: calc(100% - 20px);
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95em;
+            resize: vertical;
+        }
+        .toolbar {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .toolbar button {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.95em;
+            margin: 5px 3px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .toolbar button:hover {
+            background-color: #4cae4c;
+        }
+        .toolbar button.reset {
+            background-color: #f0ad4e;
+        }
+        .toolbar button.reset:hover {
+            background-color: #ec971f;
+        }
+         .toolbar button.a4-download {
+            background-color: #337ab7;
+        }
+        .toolbar button.a4-download:hover {
+            background-color: #286090;
+        }
+
+        /* 미리보기 영역 스타일 */
+        #previewAreaContainer {
+             margin-top:20px;
+             padding: 15px;
+             border: 1px dashed #ccc;
+             border-radius: 5px;
+        }
+        #previewAreaContainer h3 {
+            text-align:center;
+            margin-top:0;
+            margin-bottom: 15px;
+            color: #777;
+            font-size: 1.1em;
+        }
+        #previewArea {
+            border: 2px solid #777;
+            padding: 20px;
+            background-color: #fff; 
+        }
+        #previewArea .student-info-preview-single { 
+            font-size: 0.95em;
+            color: #444;
+            padding: 8px 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            text-align: left; 
+            min-height: 1.5em; 
+        }
+
+        #previewArea h1#previewConcept { 
+            font-size: 1.8em; /* 개념어 폰트 크기 증가 */
+            font-weight: bold; /* 굵게 */
+            text-align: center; 
+            margin-top: 10px; /* 학생 정보와 간격 */
+            margin-bottom: 25px; /* 프레이어 그리드와 간격 증가 */
+            color: #222; /* 더 진한 색상 */
+            padding: 12px;
+            border: 1px solid #ddd;
+            background-color: #f7f7f7;
+            border-radius: 4px;
+        }
+        #previewArea .frayer-grid-preview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px; 
+        }
+        #previewArea .grid-section-preview {
+            border: 1px solid #ccc;
+            padding: 15px; 
+            min-height: 100px; 
+            background-color: #fdfdfd;
+        }
+        #previewArea .grid-section-preview h2 { 
+            font-size: 1.15em; 
+            margin-top:0; 
+            padding-bottom:8px; 
+            border-bottom:1px solid #ddd; 
+            color: #555;
+            margin-bottom: 10px; 
+        }
+        #previewArea .grid-section-preview p { 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            margin-top: 5px; 
+            font-size: 0.95em; 
+            line-height: 1.7; 
+            color: #333;
+        }
+
+        /* A4 Print Style - CSS로 직접 스타일링 (html2canvas가 사용) */
+        .a4-worksheet {
+            width: 210mm; 
+            min-height: 296mm; 
+            padding: 15mm 20mm; 
+            margin: 0 auto;
+            background: white;
+            box-sizing: border-box;
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; 
+        }
+        .a4-worksheet .header-a4 {
+            text-align: center;
+            font-size: 18pt; 
+            font-weight: bold;
+            margin-bottom: 8mm; /* 간격 조정 */
+        }
+        .a4-worksheet .student-info-a4-single { 
+            margin-bottom: 7mm; /* 간격 조정 */
+            font-size: 11pt;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 4mm; /* 패딩 조정 */
+            min-height: 1.5em; 
+            text-align: left;
+        }
+        .a4-worksheet .concept-box-a4 { /* 개념어 박스 */
+            border: 1.5px solid #333;
+            padding: 5mm;
+            margin-bottom: 8mm;
+            font-size: 16pt; /* 크기 증가 */
+            font-weight: bold;
+            text-align: center; /* 중앙 정렬로 변경하여 강조 */
+            min-height: 1.5em; 
+            color: #222;
+            background-color: #f7f7f7;
+        }
+        .a4-worksheet .frayer-grid-a4 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, auto); 
+            gap: 8mm;
+            min-height: 175mm; /* 약간 조정 */
+        }
+        .a4-worksheet .grid-section-a4 {
+            border: 1.5px solid #333;
+            padding: 5mm;
+            display: flex;
+            flex-direction: column;
+        }
+        .a4-worksheet .grid-section-a4 h2 {
+            margin: 0 0 4mm 0;
+            font-size: 12pt;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #666;
+            padding-bottom: 2mm;
+            color: #333;
+        }
+        .a4-worksheet .grid-section-a4 .content-placeholder { 
+            flex: 1;
+            min-height: 60mm; 
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #777; 
+        }
+        .a4-worksheet .footer-a4 {
+            text-align: right;
+            font-size: 9pt;
+            margin-top: 10mm;
+            color: #555;
+        }
+
+        /* Footer 관련 CSS는 삭제됨 */
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            z-index: 1000;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loadingIndicator">처리 중... 잠시만 기다려주세요.</div>
+    
+    <div class="container">
+        <header>
+            <h1>프레이어 모델 (Frayer Model) 학습지</h1>
+        </header>
+
+        <div class="info-input-area">
+            <div>
+                <label for="studentInfo">학생 정보 (학교, 학반, 이름 순으로 입력):</label>
+                <input type="text" id="studentInfo" placeholder="예: OO초등학교 3학년 1반 홍길동">
+            </div>
+            <div>
+                <label for="mainConcept">개념어:</label>
+                <input type="text" id="mainConcept" placeholder="개념어를 입력하세요">
+            </div>
+        </div>
+
+        <div class="frayer-grid">
+            <div class="grid-section" id="definition-section">
+                <h2>정의</h2>
+                <textarea id="definition" placeholder="개념의 의미는 무엇인가요?"></textarea>
+            </div>
+            <div class="grid-section" id="characteristics-section">
+                <h2>특징</h2>
+                <textarea id="characteristics" placeholder="개념어를 설명하는 주요 특징이나 속성은 무엇인가요?"></textarea>
+            </div>
+            <div class="grid-section" id="examples-section">
+                <h2>예시</h2>
+                <textarea id="examples" placeholder="개념어에 해당하는 구체적인 예를 들어보세요"></textarea>
+            </div>
+            <div class="grid-section" id="non-examples-section">
+                <h2>비예시</h2>
+                <textarea id="nonExamples" placeholder="개념어에 해당하지 않는 것은 무엇인가요?"></textarea>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button id="updatePreviewBtn">미리보기 업데이트</button>
+            <button id="saveAsImageBtn">이미지로 저장</button>
+            <button id="saveAsPdfBtn">PDF로 저장 (완성본)</button>
+            <button id="downloadA4PdfBtn" class="a4-download">빈 학습지 다운로드 (A4)</button>
+            <button id="resetBtn" class="reset">새로 작성</button>
+        </div>
+
+        <div id="previewAreaContainer">
+             <h3>미리보기 (이 영역이 이미지/PDF로 저장됩니다)</h3>
+            <div id="previewArea">
+                <p id="previewStudentInfo" class="student-info-preview-single">학생 정보가 여기에 표시됩니다.</p>
+                <h1 id="previewConcept">개념어 입력 영역</h1>
+                <div class="frayer-grid-preview">
+                    <div class="grid-section-preview">
+                        <h2>정의</h2>
+                        <p id="previewDefinition"></p>
+                    </div>
+                    <div class="grid-section-preview">
+                        <h2>특징</h2>
+                        <p id="previewCharacteristics"></p>
+                    </div>
+                    <div class="grid-section-preview">
+                        <h2>예시</h2>
+                        <p id="previewExamples"></p>
+                    </div>
+                    <div class="grid-section-preview">
+                        <h2>비예시</h2>
+                        <p id="previewNonExamples"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        // DOM 요소 가져오기
+        const studentInfoInput = document.getElementById('studentInfo');
+        const mainConceptInput = document.getElementById('mainConcept');
+        const definitionInput = document.getElementById('definition');
+        const characteristicsInput = document.getElementById('characteristics');
+        const examplesInput = document.getElementById('examples');
+        const nonExamplesInput = document.getElementById('nonExamples');
+
+        const previewStudentInfo = document.getElementById('previewStudentInfo');
+        const previewConcept = document.getElementById('previewConcept');
+        const previewDefinition = document.getElementById('previewDefinition');
+        const previewCharacteristics = document.getElementById('previewCharacteristics');
+        const previewExamples = document.getElementById('previewExamples');
+        const previewNonExamples = document.getElementById('previewNonExamples');
+        
+        const previewArea = document.getElementById('previewArea'); 
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        function showLoading() { loadingIndicator.style.display = 'block'; }
+        function hideLoading() { loadingIndicator.style.display = 'none'; }
+
+        function updatePreview() {
+            previewStudentInfo.textContent = studentInfoInput.value.trim() || '학생 정보 (학교, 학반, 이름)';
+            previewConcept.textContent = mainConceptInput.value.trim() || '개념어 입력 영역';
+            previewDefinition.textContent = definitionInput.value;
+            previewCharacteristics.textContent = characteristicsInput.value;
+            previewExamples.textContent = examplesInput.value; 
+            previewNonExamples.textContent = nonExamplesInput.value;
+        }
+
+        function generateFileName(baseName, extension) {
+            const conceptPart = mainConceptInput.value.trim().replace(/[^a-z0-9ㄱ-힣]/gi, '_') || baseName;
+            const timestamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+            // 학생 정보는 파일명에서 제외하거나, 필요시 studentInfoInput.value를 가공하여 추가
+            return `${conceptPart}_${timestamp}.${extension}`;
+        }
+
+        document.getElementById('updatePreviewBtn').addEventListener('click', function() {
+            updatePreview();
+            alert('미리보기가 업데이트되었습니다. 저장 시 이 내용이 반영됩니다.');
+        });
+        
+        document.getElementById('saveAsImageBtn').addEventListener('click', function() {
+            if (typeof html2canvas === 'undefined') {
+                alert('오류: html2canvas 라이브러리를 로드할 수 없습니다.'); return;
+            }
+            showLoading();
+            updatePreview(); 
+
+            html2canvas(previewArea, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' }) 
+                .then(canvas => {
+                    const image = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = generateFileName('프레이어모델', 'png');
+                    link.href = image;
+                    link.click();
+                    hideLoading();
+                })
+                .catch(err => {
+                    console.error('이미지 저장 중 오류:', err);
+                    alert('이미지 저장 중 오류가 발생했습니다.');
+                    hideLoading();
+                });
+        });
+
+        document.getElementById('saveAsPdfBtn').addEventListener('click', function() {
+            if (typeof html2canvas === 'undefined' || typeof jspdf === 'undefined') {
+                alert('오류: 필수 라이브러리를 로드할 수 없습니다.'); return;
+            }
+            showLoading();
+            updatePreview(); 
+            
+            const { jsPDF } = jspdf; 
+
+            html2canvas(previewArea, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' })
+                .then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+                    
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfPageWidth = pdf.internal.pageSize.getWidth(); 
+                    const pdfPageHeight = pdf.internal.pageSize.getHeight(); 
+                    const margin = 10; 
+                    const usableWidth = pdfPageWidth - (margin * 2);
+                    const usableHeight = pdfPageHeight - (margin * 2);
+                    const aspectRatio = imgProps.width / imgProps.height;
+                    let finalImgWidth = usableWidth;
+                    let finalImgHeight = finalImgWidth / aspectRatio;
+
+                    if (finalImgHeight > usableHeight) {
+                        finalImgHeight = usableHeight;
+                        finalImgWidth = finalImgHeight * aspectRatio;
+                    }
+                    const x = (pdfPageWidth - finalImgWidth) / 2;
+                    const y = (pdfPageHeight - finalImgHeight) / 2;
+
+                    pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
+                    pdf.save(generateFileName('프레이어모델_완성본', 'pdf'));
+                    hideLoading();
+                })
+                .catch(err => {
+                    console.error('완성본 PDF 저장 중 오류:', err);
+                    alert('완성본 PDF 저장 중 오류가 발생했습니다.');
+                    hideLoading();
+                });
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            if (confirm('모든 입력 내용이 삭제됩니다. 계속하시겠습니까?')) {
+                studentInfoInput.value = ''; 
+                mainConceptInput.value = '';
+                definitionInput.value = '';
+                characteristicsInput.value = '';
+                examplesInput.value = '';
+                nonExamplesInput.value = '';
+                updatePreview(); 
+                alert('모든 내용이 초기화되었습니다.');
+            }
+        });
+
+        // "빈 학습지 다운로드 (A4)" 기능: jsPDF 폰트 임베딩 로직 제거됨. html2canvas 사용.
+        document.getElementById('downloadA4PdfBtn').addEventListener('click', function() {
+            if (typeof html2canvas === 'undefined' || typeof jspdf === 'undefined') {
+                alert('오류: 필수 라이브러리를 로드할 수 없습니다.'); return;
+            }
+            showLoading();
+            
+            const tempWorksheet = document.createElement('div');
+            tempWorksheet.className = 'a4-worksheet';
+            tempWorksheet.style.position = 'fixed'; 
+            tempWorksheet.style.left = '-300mm'; 
+            tempWorksheet.style.top = '0';
+            tempWorksheet.style.backgroundColor = '#ffffff'; 
+            tempWorksheet.style.fontFamily = '"Malgun Gothic", "맑은 고딕", sans-serif'; 
+            
+            // 사용자가 입력한 학생 정보와 개념어를 빈 양식에도 반영 (선택적)
+            const studentInfoVal = studentInfoInput.value.trim() || '학교: _______________  학반: _______________  이름: _______________';
+            const conceptVal = mainConceptInput.value.trim() || '___________________________';
+
+            tempWorksheet.innerHTML = `
+                <div class="header-a4">프레이어 모델 (Frayer Model) 학습지</div>
+                <div class="student-info-a4-single">학생 정보: ${studentInfoVal}</div>
+                <div class="concept-box-a4">개념어: ${conceptVal}</div>
+                <div class="frayer-grid-a4">
+                    <div class="grid-section-a4">
+                        <h2>정의</h2>
+                        <div class="content-placeholder"></div>
+                    </div>
+                    <div class="grid-section-a4">
+                        <h2>특징</h2>
+                        <div class="content-placeholder"></div>
+                    </div>
+                    <div class="grid-section-a4">
+                        <h2>예시</h2>
+                        <div class="content-placeholder"></div>
+                    </div>
+                    <div class="grid-section-a4">
+                        <h2>비예시</h2>
+                        <div class="content-placeholder"></div>
+                    </div>
+                </div>
+                <div class="footer-a4">날짜: ${new Date().toLocaleDateString("ko-KR")}</div>
+            `;
+            document.body.appendChild(tempWorksheet);
+
+            html2canvas(tempWorksheet, {
+                scale: 2, 
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff', 
+                width: tempWorksheet.offsetWidth, 
+                height: tempWorksheet.offsetHeight, 
+                windowWidth: tempWorksheet.scrollWidth,
+                windowHeight: tempWorksheet.scrollHeight
+            })
+            .then(canvas => {
+                document.body.removeChild(tempWorksheet);
+                
+                const { jsPDF } = jspdf;
+                const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+                const imgData = canvas.toDataURL('image/png');
+                const pdfPageWidth = pdf.internal.pageSize.getWidth();
+                const pdfPageHeight = pdf.internal.pageSize.getHeight();
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfPageWidth, pdfPageHeight); 
+
+                pdf.save(generateFileName('프레이어모델_빈학습지', 'pdf'));
+                hideLoading();
+            })
+            .catch(err => {
+                if (document.body.contains(tempWorksheet)) {
+                    document.body.removeChild(tempWorksheet);
+                }
+                console.error('빈 학습지 PDF 생성 중 오류:', err);
+                alert('빈 학습지 PDF 생성 중 오류가 발생했습니다.');
+                hideLoading();
+            });
+        });
+
+        [studentInfoInput, mainConceptInput, definitionInput, characteristicsInput, examplesInput, nonExamplesInput].forEach(input => {
+            input.addEventListener('input', updatePreview);
+        });
+
+        updatePreview();
+    </script>
+</body>
+</html>
